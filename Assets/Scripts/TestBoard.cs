@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MychIO.Device;
 using MychIO;
 using MychIO.Event;
+using System.Linq;
 
 public class TestBoard : MonoBehaviour
 {
@@ -15,7 +16,9 @@ public class TestBoard : MonoBehaviour
     private static readonly ConcurrentQueue<Action> _executionQueue = new ConcurrentQueue<Action>();
 
     private GameObject[] _touchIndicators = null;
+    private Dictionary<TouchPanelZone, GameObject> _touchIndicatorMap;
     private GameObject[] _buttonIndicators = null;
+    private Dictionary<ButtonRingZone, GameObject> _buttonIndicatorMap;
     private IOManager _ioManager;
 
     // Display
@@ -31,7 +34,14 @@ public class TestBoard : MonoBehaviour
 
         // Load game objects
         _touchIndicators = GameObject.FindGameObjectsWithTag("TouchIndicator");
+
+        _touchIndicatorMap = _touchIndicators.ToDictionary(go => Enum.Parse<TouchPanelZone>(go.name), go => go);
+
         _buttonIndicators = GameObject.FindGameObjectsWithTag("ButtonIndicator");
+
+        _buttonIndicatorMap = _buttonIndicators
+            .ToDictionary(go => Enum.Parse<ButtonRingZone>(go.name), go => go);
+
         _ioManager = new IOManager();
 
         foreach (GameObject touchIndicator in _touchIndicators)
@@ -51,35 +61,36 @@ public class TestBoard : MonoBehaviour
         var touchPanelCallbacks = new Dictionary<TouchPanelZone, Action<TouchPanelZone, InputState>>();
         var buttonRingCallbacks = new Dictionary<ButtonRingZone, Action<ButtonRingZone, InputState>>();
 
-        // Setup callbacks
-        foreach (GameObject touchIndicator in _touchIndicators)
+        // Setup callbacks for TouchPanelZone
+        foreach (TouchPanelZone touchZone in System.Enum.GetValues(typeof(TouchPanelZone)))
         {
-            if (!Enum.TryParse(touchIndicator.name, true, out TouchPanelZone touchZone))
+            if (!_touchIndicatorMap.TryGetValue(touchZone, out var touchIndicator))
             {
-                throw new Exception($"failed to connect to  {touchIndicator.name}");
+                throw new Exception($"Failed to find GameObject for {touchZone}");
             }
+
             touchPanelCallbacks[touchZone] = (TouchPanelZone input, InputState state) =>
             {
-                var currentIndicator = touchIndicator.gameObject;
                 _executionQueue.Enqueue(() =>
                 {
-                    currentIndicator.SetActive(state == InputState.On);
+                    touchIndicator.SetActive(state == InputState.On);
                 });
             };
         }
 
-        foreach (GameObject buttonIndicator in _buttonIndicators)
+        // Setup callbacks for ButtonRingZone
+        foreach (ButtonRingZone buttonZone in System.Enum.GetValues(typeof(ButtonRingZone)))
         {
-            if (!Enum.TryParse(buttonIndicator.gameObject.name, true, out ButtonRingZone buttonZone))
+            if (!_buttonIndicatorMap.TryGetValue(buttonZone, out var buttonIndicator))
             {
-                throw new Exception($"failed to connect to  {buttonIndicator.name}");
+                throw new Exception($"Failed to find GameObject for {buttonZone}");
             }
+
             buttonRingCallbacks[buttonZone] = (ButtonRingZone input, InputState state) =>
             {
-                var currentIndicator = buttonIndicator.gameObject;
                 _executionQueue.Enqueue(() =>
                 {
-                    currentIndicator.gameObject.SetActive(state == InputState.On);
+                    buttonIndicator.SetActive(state == InputState.On);
                 });
             };
         }
@@ -130,6 +141,10 @@ public class TestBoard : MonoBehaviour
                         AdxTouchPanel.GetDeviceName(),
                         inputSubscriptions: touchPanelCallbacks
                     );
+                await _ioManager.AddButtonRing(
+                    AdxIO4ButtonRing.GetDeviceName(),
+                    inputSubscriptions: buttonRingCallbacks
+                );
             }
             catch (Exception e)
             {
