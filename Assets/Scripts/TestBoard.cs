@@ -8,13 +8,12 @@ using MychIO.Device;
 using MychIO;
 using MychIO.Event;
 using System.Linq;
+using UnityEditor;
 
 public class TestBoard : MonoBehaviour
 {
 
-    // handle concurrency
-    private static readonly ConcurrentQueue<Action> _executionQueue = new ConcurrentQueue<Action>();
-
+    private ConcurrentQueue<Action> _executionQueue;
     private GameObject[] _touchIndicators = null;
     private Dictionary<TouchPanelZone, GameObject> _touchIndicatorMap;
     private GameObject[] _buttonIndicators = null;
@@ -28,6 +27,7 @@ public class TestBoard : MonoBehaviour
 
     void Start()
     {
+        _executionQueue = IOManager.ExecutionQueue;
 
         // load debug menus
         _eventText.text = "Waiting for events...";
@@ -58,10 +58,9 @@ public class TestBoard : MonoBehaviour
     public void connectDevices()
     {
         // Setup Adx Connection:
-        var touchPanelCallbacks = new Dictionary<TouchPanelZone, Action<TouchPanelZone, InputState>>();
-        var buttonRingCallbacks = new Dictionary<ButtonRingZone, Action<ButtonRingZone, InputState>>();
 
         // Setup callbacks for TouchPanelZone
+        var touchPanelCallbacks = new Dictionary<TouchPanelZone, Action<TouchPanelZone, InputState>>();
         foreach (TouchPanelZone touchZone in System.Enum.GetValues(typeof(TouchPanelZone)))
         {
             if (!_touchIndicatorMap.TryGetValue(touchZone, out var touchIndicator))
@@ -79,6 +78,7 @@ public class TestBoard : MonoBehaviour
         }
 
         // Setup callbacks for ButtonRingZone
+        var buttonRingCallbacks = new Dictionary<ButtonRingZone, Action<ButtonRingZone, InputState>>();
         foreach (ButtonRingZone buttonZone in System.Enum.GetValues(typeof(ButtonRingZone)))
         {
             if (!_buttonIndicatorMap.TryGetValue(buttonZone, out var buttonIndicator))
@@ -132,6 +132,8 @@ public class TestBoard : MonoBehaviour
         _ioManager.Destroy(); // reset everything
 
         _ioManager.SubscribeToEvents(eventCallbacks);
+
+        _ioManager.SubscribeToEvents(eventCallbacks);
         Task.Run(async () =>
         {
             try
@@ -145,22 +147,16 @@ public class TestBoard : MonoBehaviour
                     AdxIO4ButtonRing.GetDeviceName(),
                     inputSubscriptions: buttonRingCallbacks
                 );
+                await _ioManager.AddLedDevice(
+                   AdxLedDevice.GetDeviceName()
+               );
             }
             catch (Exception e)
             {
                 Debug.Log(e);
             }
-            /*
-                        await ioManager
-                        .AddButtonRing(
-                            AdxTouchPanel.GetDeviceName(),
-                            inputSubscriptions: buttonRingCallbacks
-                        );
-            */
-            Debug.Log("Devices connected");
         });
 
-        Debug.Log("HERE");
     }
 
 
