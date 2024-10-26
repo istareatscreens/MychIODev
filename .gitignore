@@ -63,7 +63,7 @@ sysinfo.txt
 
 # Packages
 /Packages/*/
-
+!/Packages/dev.isas.MychIO
 # Crashlytics generated file
 crashlytics-build.properties
 
