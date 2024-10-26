@@ -134,28 +134,25 @@ public class TestBoard : MonoBehaviour
         _ioManager.SubscribeToEvents(eventCallbacks);
 
         _ioManager.SubscribeToEvents(eventCallbacks);
-        Task.Run(async () =>
+        try
         {
-            try
-            {
-                await _ioManager
-                    .AddTouchPanel(
-                        AdxTouchPanel.GetDeviceName(),
-                        inputSubscriptions: touchPanelCallbacks
-                    );
-                await _ioManager.AddButtonRing(
-                    AdxIO4ButtonRing.GetDeviceName(),
-                    inputSubscriptions: buttonRingCallbacks
+            _ioManager
+                .AddTouchPanel(
+                    AdxTouchPanel.GetDeviceName(),
+                    inputSubscriptions: touchPanelCallbacks
                 );
-                await _ioManager.AddLedDevice(
-                   AdxLedDevice.GetDeviceName()
-               );
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e);
-            }
-        });
+            _ioManager.AddButtonRing(
+                AdxIO4ButtonRing.GetDeviceName(),
+                inputSubscriptions: buttonRingCallbacks
+            );
+            _ioManager.AddLedDevice(
+               AdxLedDevice.GetDeviceName()
+           );
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+        }
 
     }
 
