@@ -9,6 +9,7 @@ using MychIO;
 using MychIO.Event;
 using System.Linq;
 using UnityEditor;
+using MychIO.Connection.SerialDevice;
 
 public class TestBoard : MonoBehaviour
 {
@@ -134,11 +135,19 @@ public class TestBoard : MonoBehaviour
         _ioManager.SubscribeToEvents(eventCallbacks);
 
         _ioManager.SubscribeToEvents(eventCallbacks);
+
+
+        var propertiesTouchPanel = new SerialDeviceProperties(
+            (SerialDeviceProperties)AdxTouchPanel.GetDefaultConnectionProperties(),
+            comPortNumber: "COM3"
+        ).GetProperties();
+
         try
         {
             _ioManager
                 .AddTouchPanel(
                     AdxTouchPanel.GetDeviceName(),
+                    propertiesTouchPanel,
                     inputSubscriptions: touchPanelCallbacks
                 );
             _ioManager.AddButtonRing(
