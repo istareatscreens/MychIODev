@@ -138,7 +138,7 @@ public class TestBoard : MonoBehaviour
 
 
         var propertiesTouchPanel = new SerialDeviceProperties(
-            (SerialDeviceProperties)AdxTouchPanel.GetDefaultConnectionProperties(),
+            AdxTouchPanel.GetDefaultDeviceProperties(),
             comPortNumber: "COM3"
         ).GetProperties();
 
