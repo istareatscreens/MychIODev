@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System;
 using TMPro;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 using MychIO.Device;
 using MychIO;
 using MychIO.Event;
 using System.Linq;
-using UnityEditor;
 using MychIO.Connection.SerialDevice;
 
 public class TestBoard : MonoBehaviour
@@ -101,31 +99,49 @@ public class TestBoard : MonoBehaviour
                     { IOEventType.Attach,
                         (eventType, deviceType, message) =>
                         {
-                            appendEventText($"eventType: {eventType} type: {deviceType} message: {message.Trim()}");
+                            var text = $"eventType: {eventType} type: {deviceType} message: {message.Trim()}";
+                            Debug.Log(text);
+                            appendEventText(text);
                         }
                     },
                     { IOEventType.ConnectionError,
                         (eventType, deviceType, message) =>
                         {
-                            appendEventText($"eventType: {eventType} type: {deviceType} message: {message.Trim()}");
+                            var text = $"eventType: {eventType} type: {deviceType} message: {message.Trim()}";
+                            Debug.Log(text);
+                            appendEventText(text);
                         }
                     },
                     { IOEventType.Debug,
                         (eventType, deviceType, message) =>
                         {
-                            appendEventText($"eventType: {eventType} type: {deviceType} message: {message.Trim()}");
+                            var text = $"eventType: {eventType} type: {deviceType} message: {message.Trim()}";
+                            Debug.Log(text);
+                            appendEventText(text);
                         }
                     },
                     { IOEventType.Detach,
                         (eventType, deviceType, message) =>
                         {
-                            appendEventText($"eventType: {eventType} type: {deviceType} message: {message.Trim()}");
+                            var text = $"eventType: {eventType} type: {deviceType} message: {message.Trim()}";
+                            Debug.Log(text);
+                            appendEventText(text);
                         }
                     },
                     { IOEventType.SerialDeviceReadError,
                         (eventType, deviceType, message) =>
                         {
-                            appendEventText($"eventType: {eventType} type: {deviceType} message: {message.Trim()}");
+                            var text = $"eventType: {eventType} type: {deviceType} message: {message.Trim()}";
+                            Debug.Log(text);
+                            appendEventText(text);
+                        }
+                    },
+                    { IOEventType.InvalidDevicePropertyError,
+                        (eventType, deviceType, message) =>
+                        {
+                            var text = $"eventType: {eventType} type: {deviceType} message: {message.Trim()}";
+                            Debug.Log(text);
+                            appendEventText(text);
                         }
                     }
                 };
@@ -139,7 +155,8 @@ public class TestBoard : MonoBehaviour
 
         var propertiesTouchPanel = new SerialDeviceProperties(
             AdxTouchPanel.GetDefaultDeviceProperties(),
-            comPortNumber: "COM3"
+            comPortNumber: "COM3",
+            debounceTimeMs: 5
         ).GetProperties();
 
         try
@@ -152,7 +169,12 @@ public class TestBoard : MonoBehaviour
                 );
             _ioManager.AddButtonRing(
                 AdxIO4ButtonRing.GetDeviceName(),
+                new Dictionary<string, dynamic>(){
+                    { "PollingRateMs", 0 },
+                    { "DebounceTimeMs", 5}
+                },
                 inputSubscriptions: buttonRingCallbacks
+
             );
             _ioManager.AddLedDevice(
                AdxLedDevice.GetDeviceName()
@@ -162,9 +184,11 @@ public class TestBoard : MonoBehaviour
         {
             Debug.Log(e);
         }
+        // TODO: Debug this
+        var result = _ioManager.GetDeviceProperties(DeviceClassification.ButtonRing);
+        Debug.Log(result);
 
     }
-
 
     private void appendEventText(string message)
     {
