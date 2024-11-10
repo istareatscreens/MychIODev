@@ -8,6 +8,7 @@ using MychIO;
 using MychIO.Event;
 using System.Linq;
 using MychIO.Connection.SerialDevice;
+using MychIO.Device.TouchPanel;
 
 public class TestBoard : MonoBehaviour
 {
@@ -143,6 +144,14 @@ public class TestBoard : MonoBehaviour
                             Debug.Log(text);
                             appendEventText(text);
                         }
+                    },
+                    { IOEventType.TouchPanelDeviceReadError,
+                        (eventType, deviceType, message) =>
+                        {
+                            var text = $"eventType: {eventType} type: {deviceType} message: {message.Trim()}";
+                            Debug.Log(text);
+                            appendEventText(text);
+                        }
                     }
                 };
 
@@ -167,6 +176,14 @@ public class TestBoard : MonoBehaviour
                     propertiesTouchPanel,
                     inputSubscriptions: touchPanelCallbacks
                 );
+            /*
+            _ioManager
+                .AddTouchPanel(
+                    TouchPanelTouchPanel.GetDeviceName(),
+                    propertiesTouchPanel,
+                    inputSubscriptions: touchPanelCallbacks
+                );
+            */
             _ioManager.AddButtonRing(
                 AdxIO4ButtonRing.GetDeviceName(),
                 new Dictionary<string, dynamic>(){
