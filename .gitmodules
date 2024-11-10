@@ -1,3 +1,4 @@
 [submodule "Packages/dev.isas.MychIO"]
 	path = Packages/dev.isas.MychIO
 	url = https://github.com/istareatscreens/MychIO.git
+	branch = master
