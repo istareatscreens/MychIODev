@@ -9,6 +9,7 @@ using MychIO.Event;
 using System.Linq;
 using MychIO.Connection.SerialDevice;
 using MychIO.Device.TouchPanel;
+using MychIO.Connection.HidDevice;
 
 public class TestBoard : MonoBehaviour
 {
@@ -72,6 +73,7 @@ public class TestBoard : MonoBehaviour
             {
                 _executionQueue.Enqueue(() =>
                 {
+                    Debug.Log($"Setting up callback for {touchZone}, state: {state}");
                     touchIndicator.SetActive(state == InputState.On);
                 });
             };
@@ -90,6 +92,7 @@ public class TestBoard : MonoBehaviour
             {
                 _executionQueue.Enqueue(() =>
                 {
+                    Debug.Log($"Setting up callback for {buttonZone}, state: {state}");
                     buttonIndicator.SetActive(state == InputState.On);
                 });
             };
@@ -165,8 +168,13 @@ public class TestBoard : MonoBehaviour
         var propertiesTouchPanel = new SerialDeviceProperties(
             AdxTouchPanel.GetDefaultDeviceProperties(),
             comPortNumber: "COM3",
-            debounceTimeMs: 5
-        ).GetProperties();
+            debounceTimeMs: 0
+        ).Properties;
+
+        var propertiesButtonRing = new HidDeviceProperties(
+            AdxIO4ButtonRing.GetDefaultDeviceProperties(),
+            debounceTimeMs: 0
+        ).Properties;
 
         try
         {
@@ -176,6 +184,15 @@ public class TestBoard : MonoBehaviour
                     propertiesTouchPanel,
                     inputSubscriptions: touchPanelCallbacks
                 );
+            _ioManager
+            .AddButtonRing(
+                AdxIO4ButtonRing.GetDeviceName(),
+                propertiesButtonRing,
+                inputSubscriptions: buttonRingCallbacks
+            );
+
+            _ioManager.ConnectDevices();
+
             /*
             _ioManager
                 .AddTouchPanel(
@@ -183,27 +200,29 @@ public class TestBoard : MonoBehaviour
                     propertiesTouchPanel,
                     inputSubscriptions: touchPanelCallbacks
                 );
-            */
             _ioManager.AddButtonRing(
                 AdxIO4ButtonRing.GetDeviceName(),
                 new Dictionary<string, dynamic>(){
-                    { "PollingRateMs", 0 },
-                    { "DebounceTimeMs", 5}
+                { "PollingRateMs", 0 },
+                { "DebounceTimeMs", 5}
                 },
                 inputSubscriptions: buttonRingCallbacks
 
             );
+
+            /*
             _ioManager.AddLedDevice(
                AdxLedDevice.GetDeviceName()
            );
+           */
         }
         catch (Exception e)
         {
             Debug.Log(e);
         }
         // TODO: Debug this
-        var result = _ioManager.GetDeviceProperties(DeviceClassification.ButtonRing);
-        Debug.Log(result);
+        //var result = _ioManager.GetDeviceProperties(DeviceClassification.ButtonRing);
+        // Debug.Log(result);
 
     }
 
